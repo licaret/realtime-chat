@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Chat</title>
+    <script src="/socket.io/socket.io.js"></script>
+  </head>
+  <body>
+    <div>
+      <h1>Chat</h1>
+      <div>
+        <input type="text" id="username" placeholder="Enter your username..." />
+        <button id="setUsernameButton">Set Username</button>
+      </div>
+      <div>
+        <h3>Online Users:</h3>
+        <ul id="usersList"></ul>
+      </div>
+      <div>
+        <h3>Messages:</h3>
+        <ul id="messagesBoard"></ul>
+      </div>
+    </div>
+    <div>
+      <input type="text" id="messageInput" placeholder="Type a message..." />
+      <button id="sendMessageBtn">Send Message</button>
+    </div>
+    <div>
+      <h3>Private Messages:</h3>
+      <input
+        type="text"
+        id="privateRecipient"
+        placeholder="Recipient Username"
+      />
+      <input
+        type="text"
+        id="privateMessageInput"
+        placeholder="Type a private message..."
+      />
+      <button id="sendPrivateMessageBtn">Send Private Message</button>
+    </div>
+
+    <script>
+      const socket = io();
+
+      const usernameInput = document.getElementById("username");
+      const setUsernameBtn = document.getElementById("setUsernameButton");
+      const usersList = document.getElementById("usersList");
+      const messagesBoard = document.getElementById("messagesBoard");
+      const messageInput = document.getElementById("messageInput");
+      const sendMessageBtn = document.getElementById("sendMessageBtn");
+      const privateRecipient = document.getElementById("privateRecipient");
+      const privateMessageInput = document.getElementById(
+        "privateMessageInput"
+      );
+      const sendPrivateMessageBtn = document.getElementById(
+        "sendPrivateMessageBtn"
+      );
+
+      setUsernameBtn.addEventListener("click", () => {
+        const username = usernameInput.value.trim();
+        if (username) {
+          socket.emit("setUsername", username);
+        }
+      });
+
+      sendMessageBtn.addEventListener("click", () => {
+        const message = messageInput.value;
+        if (message) {
+          socket.emit("message", message);
+          messageInput.value = "";
+        }
+      });
+
+      socket.on("notification", (notification) => {
+        const li = document.createElement("li");
+        li.textContent = notification;
+        li.style.fontStyle = "italic";
+        messagesBoard.appendChild(li);
+      });
+
+      socket.on("userList", (users) => {
+        usersList.innerHTML = "";
+        users.forEach((user) => {
+          const li = document.createElement("li");
+          li.textContent = user;
+          usersList.appendChild(li);
+        });
+      });
+
+      socket.on("messageHistory", (messages) => {
+        messages.forEach(({ username, message }) => {
+          const li = document.createElement("li");
+          li.textContent = message;
+          messagesBoard.appendChild(li);
+        });
+      });
+
+      socket.on("message", ({ username, message }) => {
+        const li = document.createElement("li");
+        li.textContent = `${username}: ${message}`;
+        messagesBoard.appendChild(li);
+      });
+    </script>
+  </body>
+</html>
